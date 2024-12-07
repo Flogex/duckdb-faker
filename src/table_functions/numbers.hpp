@@ -6,7 +6,7 @@ class DatabaseInstance;
 
 namespace duckdb_faker {
 
-constexpr uint64_t DEFAULT_MAX_GENERATED_ROWS = 2048;
+constexpr uint64_t DEFAULT_MAX_GENERATED_ROWS = 2 << 16;
 
 struct RandomIntFunction {
 	static void RegisterFunction(duckdb::DatabaseInstance &instance);

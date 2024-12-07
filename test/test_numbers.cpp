@@ -18,6 +18,14 @@ TEST_CASE("random_int", "[numbers]") {
     db.LoadStaticExtension<duckdb::FakerExtension>();
     duckdb::Connection con(db);
 
+    // Currently we cut of at a maximum cardinality of 2^16
+    SECTION("Should produce the number of rows specified by LIMIT") {
+        const int32_t limit = GENERATE(0, 10, 100, 100000);
+        const auto query = std::format("FROM random_int() LIMIT {}", limit);
+        const auto res = con.Query(query);
+
+        REQUIRE(res->RowCount() == limit);
+    }
 
     SECTION("Should only produce numbers greater or equal to minimum") {
         const int32_t min = GENERATE(-100, 0, 100);
@@ -67,7 +75,7 @@ TEST_CASE("random_int", "[numbers]") {
     SECTION("Should produce uniform distribution") {
         const auto min = 1;
         const auto max = 4;
-        const auto LIMIT = 1000;
+        const auto LIMIT = 10000;
 
         const auto query = std::format("SELECT value, COUNT(1) FROM "
                                        "(FROM random_int(min={}, max={}) LIMIT {}) "
