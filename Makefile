@@ -32,3 +32,7 @@ debug: build
 
 release: BUILD_TYPE=Release
 release: build
+
+test: BUILD_TYPE?=Release
+test: build
+	./build/${BUILD_TYPE}/test/unittests
