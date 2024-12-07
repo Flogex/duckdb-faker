@@ -8,10 +8,7 @@ project(DuckDBFakerExtension)
 set(EXTENSION_NAME ${TARGET_NAME}_extension)
 set(LOADABLE_EXTENSION_NAME ${TARGET_NAME}_loadable_extension)
 
-# Add duckdb when running from CLion
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-    add_subdirectory(submodules/duckdb)
-endif()
+add_subdirectory(submodules/duckdb)
 
 set(BUILD_TESTING OFF)
 add_subdirectory(submodules/faker-cxx)

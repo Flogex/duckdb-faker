@@ -4,9 +4,6 @@
 [submodule "duckdb"]
 	path = submodules/duckdb
 	url = https://github.com/duckdb/duckdb.git
-[submodule "extension-ci-tools"]
-	path = submodules/extension-ci-tools
-	url = https://github.com/duckdb/extension-ci-tools.git
 [submodule "catch2"]
 	path = submodules/catch2
 	url = https://github.com/catchorg/Catch2.git
