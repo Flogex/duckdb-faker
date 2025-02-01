@@ -1,9 +1,10 @@
-#include <duckdb/main/extension_helper.hpp>
 #include "faker_extension.hpp"
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/generators/catch_generators.hpp"
 #include "duckdb/main/connection.hpp"
 #include "duckdb/main/database.hpp"
+
+#include <cstdint>
 
 constexpr uint32_t LIMIT = 100;
 
@@ -72,7 +73,20 @@ TEST_CASE("random_int", "[numbers]") {
         }
     }
 
-    SECTION("Should produce uniform distribution") {
+    SECTION("Should reject a minimum greater than maximum") {
+        auto [min, max] = GENERATE(
+            std::make_tuple<int32_t, int32_t>(1, 0),
+            std::make_tuple<int32_t, int32_t>(-5, -6)
+        );
+
+        const auto query = std::format("SELECT value FROM random_int(min={}, max={})", min, max);
+        auto res = con.Query(query);
+
+        REQUIRE(res->HasError());
+        REQUIRE(res->GetError() == "Invalid Input Error: Minimum value must be less than or equal to maximum value");
+    }
+
+    SECTION("Should produce uniform distribution by default") {
         const auto min = 1;
         const auto max = 4;
         const auto LIMIT = 10000;

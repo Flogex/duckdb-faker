@@ -44,6 +44,11 @@ unique_ptr<FunctionData> RandomIntBind(ClientContext &, TableFunctionBindInput &
         bind_data->max = input.named_parameters["max"].GetValue<int32_t>();
     }
 
+    if (bind_data->min.has_value() && bind_data->max.has_value() &&
+        bind_data->min.value() > bind_data->max.value()) {
+        throw InvalidInputException("Minimum value must be less than or equal to maximum value");
+    }
+
     return bind_data;
 }
 
