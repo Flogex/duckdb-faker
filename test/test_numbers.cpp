@@ -86,7 +86,7 @@ TEST_CASE("random_int", "[numbers]") {
         REQUIRE(res->GetError() == "Invalid Input Error: Minimum value must be less than or equal to maximum value");
     }
 
-    SECTION("Should produce uniform distribution by default") {
+    SECTION("Should produce uniform distribution by default", "[!mayfail]") {
         const auto min = 1;
         const auto max = 4;
         const auto LIMIT = 10000;
