@@ -1,13 +1,16 @@
-#include "duckdb/main/extension_util.hpp"
-#include "duckdb/main/database.hpp"
+#include "numbers.hpp"
 
+#include "duckdb/common/exception.hpp"
+#include "duckdb/common/types.hpp"
+#include "duckdb/common/types/data_chunk.hpp"
 #include "duckdb/common/vector.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/function/table_function.hpp"
-#include "duckdb/common/types.hpp"
-#include "duckdb/common/types/data_chunk.hpp"
-#include "numbers.hpp"
+#include "duckdb/main/extension_util.hpp"
+#include "duckdb/main/database.hpp"
 #include "faker-cxx/number.h"
+#include "probability_distributions.hpp"
+
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -24,6 +27,7 @@ namespace {
 struct RandomIntFunctionData final : TableFunctionData {
     std::optional<int32_t> min;
     std::optional<int32_t> max;
+    std::optional<ProbabilityDistribution::Type> distribution;
 };
 
 struct RandomIntGlobalState final : GlobalTableFunctionState {
@@ -49,6 +53,16 @@ unique_ptr<FunctionData> RandomIntBind(ClientContext &, TableFunctionBindInput &
         throw InvalidInputException("Minimum value must be less than or equal to maximum value");
     }
 
+    if (input.named_parameters.contains("distribution")) {
+        const std::string distribution_str = input.named_parameters["distribution"].GetValue<string>();
+        const std::optional<ProbabilityDistribution::Type> distribution =
+            ProbabilityDistribution::FromString(distribution_str);
+        if (!distribution.has_value()) {
+            throw InvalidInputException("Invalid probability distribution %s", distribution_str);
+        }
+        bind_data->distribution = distribution;
+    }
+
     return bind_data;
 }
 
@@ -66,13 +80,18 @@ void RandomIntExecute(ClientContext &, TableFunctionInput &input, DataChunk &out
     const auto &bind_data = input.bind_data->Cast<RandomIntFunctionData>();
     const int32_t min = bind_data.min.value_or(std::numeric_limits<int32_t>::min());
     const int32_t max = bind_data.max.value_or(std::numeric_limits<int32_t>::max());
+    const ProbabilityDistribution::Type distribution = bind_data.distribution.value_or(ProbabilityDistribution::Type::UNIFORM);
 
     const idx_t cardinality = num_remaining_rows < STANDARD_VECTOR_SIZE ? num_remaining_rows : STANDARD_VECTOR_SIZE;
     output.SetCardinality(cardinality);
-    for (idx_t idx = 0; idx < cardinality; idx++) {
-        const int32_t random_num = faker::number::integer(min, max);
-        output.SetValue(0, idx, Value(random_num));
+
+    if (distribution == ProbabilityDistribution::Type::UNIFORM) {
+        for (idx_t idx = 0; idx < cardinality; idx++) {
+            const int32_t random_num = faker::number::integer(min, max);
+            output.SetValue(0, idx, Value(random_num));
+        }
     }
+
     state.num_generated_rows += cardinality;
 }
 } // anonymous namespace
