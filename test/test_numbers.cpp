@@ -111,4 +111,10 @@ TEST_CASE("random_int", "[numbers]") {
             CHECK(num_of_occurrences <= upper_bound);
         }
     }
+
+    SECTION("Should reject unknown distribution arguments") {
+        auto res = con.Query("FROM random_int(distribution='unknown')");
+        REQUIRE(res->HasError());
+        REQUIRE(res->GetError() == "Invalid Input Error: Unknown probability distribution \"unknown\"");
+    }
 }

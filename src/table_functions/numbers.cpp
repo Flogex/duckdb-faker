@@ -58,7 +58,7 @@ unique_ptr<FunctionData> RandomIntBind(ClientContext &, TableFunctionBindInput &
         const std::optional<ProbabilityDistribution::Type> distribution =
             ProbabilityDistribution::FromString(distribution_str);
         if (!distribution.has_value()) {
-            throw InvalidInputException("Invalid probability distribution %s", distribution_str);
+            throw InvalidInputException("Unknown probability distribution \"%s\"", distribution_str);
         }
         bind_data->distribution = distribution;
     }
@@ -100,6 +100,7 @@ void RandomIntFunction::RegisterFunction(DatabaseInstance &instance) {
     TableFunction random_int_function("random_int", {}, RandomIntExecute, RandomIntBind, RandomIntGlobalInit);
     random_int_function.named_parameters["min"] = LogicalType::INTEGER;
     random_int_function.named_parameters["max"] = LogicalType::INTEGER;
+    random_int_function.named_parameters["distribution"] = LogicalType::VARCHAR;
     ExtensionUtil::RegisterFunction(instance, random_int_function);
 }
 } // namespace duckdb_faker
