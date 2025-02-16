@@ -8,7 +8,11 @@ project(DuckDBFakerExtension)
 set(EXTENSION_NAME ${TARGET_NAME}_extension)
 set(LOADABLE_EXTENSION_NAME ${TARGET_NAME}_loadable_extension)
 
-add_subdirectory(submodules/duckdb)
+add_subdirectory(submodules/duckdb ${CMAKE_BINARY_DIR}/duckdb)
+# We need to get DUCKDB_MODULE_BASE_DIR and DUCKDB_NORMALIZED_VERSION into this scope
+# for the call of the append_metadata.cmake script to succeed
+set(DUCKDB_MODULE_BASE_DIR ${DuckDB_SOURCE_DIR})
+get_directory_property(DUCKDB_NORMALIZED_VERSION DIRECTORY "${DuckDB_SOURCE_DIR}" DEFINITION DUCKDB_NORMALIZED_VERSION)
 
 set(BUILD_TESTING OFF)
 add_subdirectory(submodules/faker-cxx)
@@ -18,7 +22,8 @@ set(SOURCE_FILES
     src/table_functions/numbers.cpp)
 
 build_static_extension(${TARGET_NAME} ${SOURCE_FILES})
-build_loadable_extension(${TARGET_NAME} " " ${SOURCE_FILES})
+set(PARAMETERS " ")
+build_loadable_extension(${TARGET_NAME} ${PARAMETERS} ${SOURCE_FILES})
 
 set(INCLUDES
     src/include
