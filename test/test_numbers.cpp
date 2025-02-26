@@ -12,6 +12,10 @@ using namespace duckdb_faker::test_helpers;
 constexpr uint32_t LIMIT = 100;
 
 static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResult> &res) {
+    if (res->HasError()) {
+        FAIL(res->GetError());
+    }
+
     REQUIRE(res->RowCount() == LIMIT);
     REQUIRE(res->Collection().ColumnCount() == 1);
     REQUIRE(res->Collection().ChunkCount() == 1);
