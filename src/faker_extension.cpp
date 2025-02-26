@@ -4,12 +4,14 @@
 #include "duckdb/common/types.hpp"
 #include "duckdb/main/database.hpp"
 #include "table_functions/numbers.hpp"
+#include "table_functions/strings.hpp"
 
 namespace duckdb {
 
 void FakerExtension::Load(DuckDB &db) {
     DatabaseInstance &instance = *db.instance;
     duckdb_faker::RandomIntFunction::RegisterFunction(instance);
+    duckdb_faker::RandomStringFunction::RegisterFunction(instance);
 }
 
 std::string FakerExtension::Name() {

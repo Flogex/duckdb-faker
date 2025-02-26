@@ -7,7 +7,11 @@ add_subdirectory(${CATCH_DIR} ${CMAKE_CURRENT_BINARY_DIR}/catch2)
 
 set(DUCKDB_DIR ${CMAKE_CURRENT_LIST_DIR}/../submodules/duckdb)
 
-add_executable(unittests test_numbers.cpp)
+add_executable(unittests
+    test_numbers.cpp
+    test_shared.cpp
+    test_strings.cpp)
+
 target_include_directories(unittests PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/../src/include
     ${DUCKDB_DIR}/src/include

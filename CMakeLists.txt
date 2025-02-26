@@ -19,7 +19,8 @@ add_subdirectory(submodules/faker-cxx)
 
 set(SOURCE_FILES
     src/faker_extension.cpp
-    src/table_functions/numbers.cpp)
+    src/table_functions/numbers.cpp
+    src/table_functions/strings.cpp)
 
 build_static_extension(${TARGET_NAME} ${SOURCE_FILES})
 set(PARAMETERS " ")
@@ -27,6 +28,7 @@ build_loadable_extension(${TARGET_NAME} ${PARAMETERS} ${SOURCE_FILES})
 
 set(INCLUDES
     src/include
+    src
     ${CMAKE_CURRENT_LIST_DIR}/submodules/faker-cxx/include)
 
 target_include_directories(${EXTENSION_NAME} PRIVATE ${INCLUDES})

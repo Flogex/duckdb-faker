@@ -9,6 +9,7 @@
 #include "duckdb/main/extension_util.hpp"
 #include "duckdb/main/database.hpp"
 #include "faker-cxx/number.h"
+#include "generator_global_state.hpp"
 #include "probability_distributions.hpp"
 
 #include <cstdint>
@@ -30,15 +31,12 @@ struct RandomIntFunctionData final : TableFunctionData {
     std::optional<ProbabilityDistribution::Type> distribution;
 };
 
-struct RandomIntGlobalState final : GlobalTableFunctionState {
-    uint64_t num_generated_rows = 0;
-    uint64_t max_generated_rows = DEFAULT_MAX_GENERATED_ROWS;
-};
+struct RandomIntGlobalState final : GeneratorGlobalState { };
 
 unique_ptr<FunctionData> RandomIntBind(ClientContext &, TableFunctionBindInput &input, vector<LogicalType> &return_types,
                                        vector<string> &names) {
-    return_types.push_back(LogicalType::INTEGER);
     names.push_back("value");
+    return_types.push_back(LogicalType::INTEGER);
 
     auto bind_data = make_uniq<RandomIntFunctionData>();
     if (input.named_parameters.contains("min")) {
@@ -103,4 +101,5 @@ void RandomIntFunction::RegisterFunction(DatabaseInstance &instance) {
     random_int_function.named_parameters["distribution"] = LogicalType::VARCHAR;
     ExtensionUtil::RegisterFunction(instance, random_int_function);
 }
+
 } // namespace duckdb_faker

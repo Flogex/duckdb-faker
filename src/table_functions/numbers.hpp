@@ -1,14 +1,8 @@
 #pragma once
 
-#include <cstdint>
-
-namespace duckdb {
-class DatabaseInstance;
-}
+#include "utils/database_instance.hpp"
 
 namespace duckdb_faker {
-
-constexpr uint64_t DEFAULT_MAX_GENERATED_ROWS = 2 << 16;
 
 struct RandomIntFunction {
 	static void RegisterFunction(duckdb::DatabaseInstance &instance);
