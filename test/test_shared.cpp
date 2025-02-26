@@ -3,13 +3,12 @@
 #include "duckdb/main/connection.hpp"
 #include "duckdb/main/database.hpp"
 #include "faker_extension.hpp"
+#include "test_helpers/database_fixture.hpp"
+
+using namespace duckdb_faker::test_helpers;
 
 // Currently we cut of at a maximum cardinality of 2^16
-TEST_CASE("Should produce the number of rows specified by LIMIT", "[shared]") {
-    duckdb::DuckDB db(nullptr);
-    db.LoadStaticExtension<duckdb::FakerExtension>();
-    duckdb::Connection con(db);
-
+TEST_CASE_METHOD(DatabaseFixture, "Should produce the number of rows specified by LIMIT", "[shared]") {
     const int32_t limit = GENERATE(0, 10, 100, 100000);
     const std::string table_function = GENERATE("random_int", "random_string");
     const auto query = std::format("FROM {}() LIMIT {}", table_function, limit);

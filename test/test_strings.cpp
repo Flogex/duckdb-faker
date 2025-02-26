@@ -1,15 +1,11 @@
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/generators/catch_generators.hpp"
 #include "duckdb/common/types.hpp"
-#include "duckdb/main/connection.hpp"
-#include "duckdb/main/database.hpp"
-#include "faker_extension.hpp"
+#include "test_helpers/database_fixture.hpp"
 
-TEST_CASE("random_string", "[strings]") {
-    duckdb::DuckDB db(nullptr);
-    db.LoadStaticExtension<duckdb::FakerExtension>();
-    duckdb::Connection con(db);
+using namespace duckdb_faker::test_helpers;
 
+TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
     SECTION("Should produce non-null strings") {
         const auto res = con.Query("FROM random_string() LIMIT 1");
         const auto val = res->GetValue(0, 0);

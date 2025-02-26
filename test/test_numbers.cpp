@@ -3,8 +3,11 @@
 #include "duckdb/main/connection.hpp"
 #include "duckdb/main/database.hpp"
 #include "faker_extension.hpp"
+#include "test_helpers/database_fixture.hpp"
 
 #include <cstdint>
+
+using namespace duckdb_faker::test_helpers;
 
 constexpr uint32_t LIMIT = 100;
 
@@ -14,11 +17,7 @@ static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResul
     REQUIRE(res->Collection().ChunkCount() == 1);
 }
 
-TEST_CASE("random_int", "[numbers]") {
-    duckdb::DuckDB db(nullptr);
-    db.LoadStaticExtension<duckdb::FakerExtension>();
-    duckdb::Connection con(db);
-
+TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
     SECTION("Should only produce numbers greater or equal to minimum") {
         const int32_t min = GENERATE(-100, 0, 100);
 
