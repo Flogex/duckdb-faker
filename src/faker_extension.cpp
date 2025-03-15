@@ -1,8 +1,10 @@
 #define DUCKDB_EXTENSION_MAIN
 
 #include "faker_extension.hpp"
+
 #include "duckdb/common/types.hpp"
 #include "duckdb/main/database.hpp"
+#include "table_functions/booleans.hpp"
 #include "table_functions/numbers.hpp"
 #include "table_functions/strings.hpp"
 
@@ -10,6 +12,7 @@ namespace duckdb {
 
 void FakerExtension::Load(DuckDB &db) {
     DatabaseInstance &instance = *db.instance;
+    duckdb_faker::RandomBoolFunction::RegisterFunction(instance);
     duckdb_faker::RandomIntFunction::RegisterFunction(instance);
     duckdb_faker::RandomStringFunction::RegisterFunction(instance);
 }

@@ -19,6 +19,7 @@ add_subdirectory(submodules/faker-cxx)
 
 set(SOURCE_FILES
     src/faker_extension.cpp
+    src/table_functions/booleans.cpp
     src/table_functions/numbers.cpp
     src/table_functions/strings.cpp)
 
