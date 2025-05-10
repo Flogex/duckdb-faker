@@ -14,7 +14,7 @@ public:
         UNIFORM = 0
     };
 
-    static std::optional<Type> FromString(const std::string &input) {
+    static std::optional<Type> FromString(const std::string& input) {
         if (duckdb::StringUtil::CIEquals(input, "uniform")) {
             return std::make_optional(Type::UNIFORM);
         }

@@ -12,7 +12,7 @@ using Catch::Matchers::ContainsSubstring;
 
 constexpr uint32_t LIMIT = 100;
 
-static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResult> &res) {
+static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResult>& res) {
     if (res->HasError()) {
         FAIL(res->GetError());
     }
@@ -56,10 +56,9 @@ TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
     }
 
     SECTION("Should throw error when length and min/max are both specified") {
-        const auto query = GENERATE(
-            "FROM random_string(length=10, min_length=1)",
-            "FROM random_string(length=10, max_length=5)",
-            "FROM random_string(length=10, min_length=1, max_length=5)");
+        const auto query = GENERATE("FROM random_string(length=10, min_length=1)",
+                                    "FROM random_string(length=10, max_length=5)",
+                                    "FROM random_string(length=10, min_length=1, max_length=5)");
 
         const auto res = con.Query(query);
 
@@ -88,7 +87,6 @@ TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
         REQUIRE(val.size() == UINT64_MAX);
     }
     */
-
 
     SECTION("Should produce strings with given maximum length") {
     }

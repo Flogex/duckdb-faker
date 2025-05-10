@@ -19,20 +19,19 @@ struct RandomStringFunctionData final : TableFunctionData {
     std::optional<uint64_t> max_length;
 };
 
-struct RandomStringGlobalState final : GeneratorGlobalState { };
+struct RandomStringGlobalState final : GeneratorGlobalState {};
 
-unique_ptr<FunctionData> RandomStringBind(ClientContext &, TableFunctionBindInput &input, vector<LogicalType> &return_types,
-                                       vector<string> &names) {
+unique_ptr<FunctionData> RandomStringBind(ClientContext&, TableFunctionBindInput& input,
+                                          vector<LogicalType>& return_types, vector<string>& names) {
     names.push_back("value");
     return_types.push_back(LogicalType::VARCHAR);
 
     auto bind_data = make_uniq<RandomStringFunctionData>();
 
-    const auto &named_parameters = input.named_parameters;
+    const auto& named_parameters = input.named_parameters;
 
     if (named_parameters.contains("length") &&
-        (named_parameters.contains("min_length") ||
-         named_parameters.contains("max_length"))) {
+        (named_parameters.contains("min_length") || named_parameters.contains("max_length"))) {
         throw InvalidInputException("Can only specify either length or min_length/max_length");
     }
 
@@ -51,11 +50,11 @@ unique_ptr<FunctionData> RandomStringBind(ClientContext &, TableFunctionBindInpu
     return bind_data;
 }
 
-unique_ptr<GlobalTableFunctionState> RandomStringGlobalInit(ClientContext &, TableFunctionInitInput &) {
+unique_ptr<GlobalTableFunctionState> RandomStringGlobalInit(ClientContext&, TableFunctionInitInput&) {
     return make_uniq<RandomStringGlobalState>();
 }
 
-uint64_t get_string_length(const RandomStringFunctionData &bind_data) {
+uint64_t get_string_length(const RandomStringFunctionData& bind_data) {
     if (bind_data.length.has_value()) {
         return bind_data.length.value();
     }
@@ -84,9 +83,9 @@ uint64_t get_string_length(const RandomStringFunctionData &bind_data) {
     return faker::number::integer(min, max);
 }
 
-void RandomStringExecute(ClientContext &, TableFunctionInput &input, DataChunk &output) {
+void RandomStringExecute(ClientContext&, TableFunctionInput& input, DataChunk& output) {
     D_ASSERT(output.ColumnCount() == 1);
-    auto &state = input.global_state->Cast<RandomStringGlobalState>();
+    auto& state = input.global_state->Cast<RandomStringGlobalState>();
 
     D_ASSERT(state.num_generated_rows <= state.max_generated_rows); // We don't want to underflow
     const auto num_remaining_rows = state.max_generated_rows - state.num_generated_rows;
@@ -94,7 +93,7 @@ void RandomStringExecute(ClientContext &, TableFunctionInput &input, DataChunk &
     const idx_t cardinality = num_remaining_rows < STANDARD_VECTOR_SIZE ? num_remaining_rows : STANDARD_VECTOR_SIZE;
     output.SetCardinality(cardinality);
 
-    const auto &bind_data = input.bind_data->Cast<RandomStringFunctionData>();
+    const auto& bind_data = input.bind_data->Cast<RandomStringFunctionData>();
 
     for (idx_t idx = 0; idx < cardinality; idx++) {
         const auto string_length = get_string_length(bind_data);
@@ -107,8 +106,9 @@ void RandomStringExecute(ClientContext &, TableFunctionInput &input, DataChunk &
 }
 } // anonymous namespace
 
-void RandomStringFunction::RegisterFunction(DatabaseInstance &instance) {
-    TableFunction random_string_function("random_string", {}, RandomStringExecute, RandomStringBind, RandomStringGlobalInit);
+void RandomStringFunction::RegisterFunction(DatabaseInstance& instance) {
+    TableFunction random_string_function(
+        "random_string", {}, RandomStringExecute, RandomStringBind, RandomStringGlobalInit);
     random_string_function.named_parameters["length"] = LogicalType::UBIGINT;
     random_string_function.named_parameters["min_length"] = LogicalType::UBIGINT;
     random_string_function.named_parameters["max_length"] = LogicalType::UBIGINT;

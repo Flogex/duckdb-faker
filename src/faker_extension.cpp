@@ -10,8 +10,8 @@
 
 namespace duckdb {
 
-void FakerExtension::Load(DuckDB &db) {
-    DatabaseInstance &instance = *db.instance;
+void FakerExtension::Load(DuckDB& db) {
+    DatabaseInstance& instance = *db.instance;
     duckdb_faker::RandomBoolFunction::RegisterFunction(instance);
     duckdb_faker::RandomIntFunction::RegisterFunction(instance);
     duckdb_faker::RandomStringFunction::RegisterFunction(instance);
@@ -29,12 +29,12 @@ std::string FakerExtension::Version() const {
 
 extern "C" {
 
-DUCKDB_EXTENSION_API void faker_init(duckdb::DatabaseInstance &db) {
+DUCKDB_EXTENSION_API void faker_init(duckdb::DatabaseInstance& db) {
     duckdb::DuckDB db_wrapper(db);
     db_wrapper.LoadExtension<duckdb::FakerExtension>();
 }
 
-DUCKDB_EXTENSION_API const char *faker_version() {
+DUCKDB_EXTENSION_API const char* faker_version() {
     return duckdb::DuckDB::LibraryVersion();
 }
 }

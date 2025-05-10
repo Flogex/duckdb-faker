@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: configure build debug release
+.PHONY: configure build debug release format
 
 ifneq (${OSX_BUILD_ARCH}, "")
 	OSX_BUILD_FLAG=-DOSX_BUILD_ARCH=${OSX_BUILD_ARCH}
@@ -32,3 +32,6 @@ release: build
 test: BUILD_TYPE?=Release
 test: build
 	./build/${BUILD_TYPE}/test/unittests
+
+format:
+	@bash scripts/run-format.sh

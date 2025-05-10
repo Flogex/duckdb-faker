@@ -13,7 +13,7 @@ using namespace duckdb_faker::test_helpers;
 
 constexpr uint32_t LIMIT = 100;
 
-static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResult> &res) {
+static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResult>& res) {
     if (res->HasError()) {
         FAIL(res->GetError());
     }
@@ -39,8 +39,8 @@ TEST_CASE_METHOD(DatabaseFixture, "random_bool", "[booleans]") {
         CAPTURE(true_count, false_count);
         REQUIRE(true_count + false_count == limit);
 
-        //We expect a difference of 1% or less.
-        // true_count + false_count == 100'000, hence expected count is 50'000.
+        // We expect a difference of 1% or less.
+        //  true_count + false_count == 100'000, hence expected count is 50'000.
         CHECK((true_count >= 49'000 && true_count <= 51'000));
     }
 
@@ -70,8 +70,8 @@ TEST_CASE_METHOD(DatabaseFixture, "random_bool", "[booleans]") {
         // std::format thinks -0.001 is equal to 0
         const double true_probability_times_1000 = GENERATE(-2000, -1, 1001, 2000);
 
-        const auto query = std::format("FROM random_bool(true_probability={}/1000) LIMIT {}",
-            true_probability_times_1000, LIMIT);
+        const auto query =
+            std::format("FROM random_bool(true_probability={}/1000) LIMIT {}", true_probability_times_1000, LIMIT);
         const auto res = con.Query(query);
 
         REQUIRE(res->HasError());
@@ -87,7 +87,8 @@ TEST_CASE_METHOD(DatabaseFixture, "random_bool", "[booleans]") {
                                        "FROM random_bool(true_probability={}) LIMIT {}) "
                                        "SELECT value, COUNT(value) FROM random_bools "
                                        "GROUP BY value ORDER BY value",
-                                       true_probability, row_count);
+                                       true_probability,
+                                       row_count);
         const auto res = con.Query(query);
 
         REQUIRE(res->GetValue<bool>(0, 0) == false);

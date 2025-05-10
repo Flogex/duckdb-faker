@@ -11,7 +11,7 @@ using namespace duckdb_faker::test_helpers;
 
 constexpr uint32_t LIMIT = 100;
 
-static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResult> &res) {
+static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResult>& res) {
     if (res->HasError()) {
         FAIL(res->GetError());
     }
@@ -49,11 +49,9 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
     }
 
     SECTION("Should respect both minimum and maximum") {
-        auto [min, max] = GENERATE(
-            std::make_tuple<int32_t, int32_t>(-1000, 42),
-            std::make_tuple<int32_t, int32_t>(42, 1000),
-            std::make_tuple<int32_t, int32_t>(-42, 42)
-        );
+        auto [min, max] = GENERATE(std::make_tuple<int32_t, int32_t>(-1000, 42),
+                                   std::make_tuple<int32_t, int32_t>(42, 1000),
+                                   std::make_tuple<int32_t, int32_t>(-42, 42));
 
         const auto query = std::format("SELECT value FROM random_int(min={}, max={}) LIMIT {}", min, max, LIMIT);
         const auto res = con.Query(query);
@@ -68,10 +66,7 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
     }
 
     SECTION("Should reject a minimum greater than maximum") {
-        auto [min, max] = GENERATE(
-            std::make_tuple<int32_t, int32_t>(1, 0),
-            std::make_tuple<int32_t, int32_t>(-5, -6)
-        );
+        auto [min, max] = GENERATE(std::make_tuple<int32_t, int32_t>(1, 0), std::make_tuple<int32_t, int32_t>(-5, -6));
 
         const auto query = std::format("SELECT value FROM random_int(min={}, max={})", min, max);
         auto res = con.Query(query);
@@ -89,7 +84,9 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
                                        "(FROM random_int(min={}, max={}) LIMIT {}) "
                                        "GROUP BY value "
                                        "ORDER BY value",
-                                       min, max, LIMIT);
+                                       min,
+                                       max,
+                                       LIMIT);
         const auto res = con.Query(query);
 
         const auto num_of_ones = res->GetValue(1, 0).GetValue<int64_t>();

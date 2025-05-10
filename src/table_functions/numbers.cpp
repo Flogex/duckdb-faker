@@ -6,8 +6,8 @@
 #include "duckdb/common/vector.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/function/table_function.hpp"
-#include "duckdb/main/extension_util.hpp"
 #include "duckdb/main/database.hpp"
+#include "duckdb/main/extension_util.hpp"
 #include "faker-cxx/number.h"
 #include "generator_global_state.hpp"
 #include "probability_distributions.hpp"
@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <string>
 
 using namespace duckdb;
 
@@ -31,10 +32,10 @@ struct RandomIntFunctionData final : TableFunctionData {
     std::optional<ProbabilityDistribution::Type> distribution;
 };
 
-struct RandomIntGlobalState final : GeneratorGlobalState { };
+struct RandomIntGlobalState final : GeneratorGlobalState {};
 
-unique_ptr<FunctionData> RandomIntBind(ClientContext &, TableFunctionBindInput &input, vector<LogicalType> &return_types,
-                                       vector<string> &names) {
+unique_ptr<FunctionData> RandomIntBind(ClientContext&, TableFunctionBindInput& input, vector<LogicalType>& return_types,
+                                       vector<string>& names) {
     names.push_back("value");
     return_types.push_back(LogicalType::INTEGER);
 
@@ -46,8 +47,7 @@ unique_ptr<FunctionData> RandomIntBind(ClientContext &, TableFunctionBindInput &
         bind_data->max = input.named_parameters["max"].GetValue<int32_t>();
     }
 
-    if (bind_data->min.has_value() && bind_data->max.has_value() &&
-        bind_data->min.value() > bind_data->max.value()) {
+    if (bind_data->min.has_value() && bind_data->max.has_value() && bind_data->min.value() > bind_data->max.value()) {
         throw InvalidInputException("Minimum value must be less than or equal to maximum value");
     }
 
@@ -64,21 +64,22 @@ unique_ptr<FunctionData> RandomIntBind(ClientContext &, TableFunctionBindInput &
     return bind_data;
 }
 
-unique_ptr<GlobalTableFunctionState> RandomIntGlobalInit(ClientContext &, TableFunctionInitInput &) {
+unique_ptr<GlobalTableFunctionState> RandomIntGlobalInit(ClientContext&, TableFunctionInitInput&) {
     return make_uniq<RandomIntGlobalState>();
 }
 
-void RandomIntExecute(ClientContext &, TableFunctionInput &input, DataChunk &output) {
+void RandomIntExecute(ClientContext&, TableFunctionInput& input, DataChunk& output) {
     D_ASSERT(output.ColumnCount() == 1);
-    auto &state = input.global_state->Cast<RandomIntGlobalState>();
+    auto& state = input.global_state->Cast<RandomIntGlobalState>();
 
     D_ASSERT(state.num_generated_rows <= state.max_generated_rows); // We don't want to underflow
     const auto num_remaining_rows = state.max_generated_rows - state.num_generated_rows;
 
-    const auto &bind_data = input.bind_data->Cast<RandomIntFunctionData>();
+    const auto& bind_data = input.bind_data->Cast<RandomIntFunctionData>();
     const int32_t min = bind_data.min.value_or(std::numeric_limits<int32_t>::min());
     const int32_t max = bind_data.max.value_or(std::numeric_limits<int32_t>::max());
-    const ProbabilityDistribution::Type distribution = bind_data.distribution.value_or(ProbabilityDistribution::Type::UNIFORM);
+    const ProbabilityDistribution::Type distribution =
+        bind_data.distribution.value_or(ProbabilityDistribution::Type::UNIFORM);
 
     const idx_t cardinality = num_remaining_rows < STANDARD_VECTOR_SIZE ? num_remaining_rows : STANDARD_VECTOR_SIZE;
     output.SetCardinality(cardinality);
@@ -94,7 +95,7 @@ void RandomIntExecute(ClientContext &, TableFunctionInput &input, DataChunk &out
 }
 } // anonymous namespace
 
-void RandomIntFunction::RegisterFunction(DatabaseInstance &instance) {
+void RandomIntFunction::RegisterFunction(DatabaseInstance& instance) {
     TableFunction random_int_function("random_int", {}, RandomIntExecute, RandomIntBind, RandomIntGlobalInit);
     random_int_function.named_parameters["min"] = LogicalType::INTEGER;
     random_int_function.named_parameters["max"] = LogicalType::INTEGER;
