@@ -76,9 +76,9 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
     }
 
     SECTION("Should produce uniform distribution by default", "[!mayfail]") {
-        const auto min = 1;
-        const auto max = 4;
-        const auto LIMIT = 10000;
+        constexpr uint32_t min = 1;
+        constexpr uint32_t max = 4;
+        constexpr uint32_t limit = 10000;
 
         const auto query = std::format("SELECT value, COUNT(1) FROM "
                                        "(FROM random_int(min={}, max={}) LIMIT {}) "
@@ -86,7 +86,7 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
                                        "ORDER BY value",
                                        min,
                                        max,
-                                       LIMIT);
+                                       limit);
         const auto res = con.Query(query);
 
         const auto num_of_ones = res->GetValue(1, 0).GetValue<int64_t>();
@@ -94,8 +94,8 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
         const auto num_of_threes = res->GetValue(1, 2).GetValue<int64_t>();
         const auto num_of_fours = res->GetValue(1, 3).GetValue<int64_t>();
         // Some arbitrary bounds
-        const auto lower_bound = LIMIT / 4 - LIMIT * 0.025;
-        const auto upper_bound = LIMIT / 4 + LIMIT * 0.025;
+        constexpr auto lower_bound = limit / 4 - limit * 0.025;
+        constexpr auto upper_bound = limit / 4 + limit * 0.025;
 
         for (auto num_of_occurrences : {num_of_ones, num_of_twos, num_of_threes, num_of_fours}) {
             CHECK(num_of_occurrences >= lower_bound);
