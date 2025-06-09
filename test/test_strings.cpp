@@ -4,6 +4,7 @@
 #include "duckdb/common/types.hpp"
 #include "test_helpers/database_fixture.hpp"
 
+#include <cctype>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -32,6 +33,21 @@ TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
         REQUIRE_FALSE(val.IsNull());
     }
 
+    SECTION("Should produce strings with only letters") {
+        const auto query = std::format("FROM random_string() LIMIT {}", LIMIT);
+        const auto res = con.Query(query);
+
+        sanity_check(res);
+        for (uint32_t row = 0; row < LIMIT; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            for (char c : val) {
+                CHECK(std::isalpha(c));
+            }
+        }
+    }
+}
+
+TEST_CASE_METHOD(DatabaseFixture, "random_string length", "[strings]") {
     SECTION("Should produce strings of the specified length") {
         const uint32_t length = GENERATE(1, 10, 100, 1000);
 
@@ -121,7 +137,6 @@ TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
     SECTION("Should handle min_length greater than max_length") {
         const auto query = "FROM random_string(min_length=100, max_length=50)";
         const auto res = con.Query(query);
-
         REQUIRE(res->HasError());
         CHECK_THAT(res->GetError(), ContainsSubstring("min_length cannot be greater than max_length"));
     }
@@ -144,5 +159,79 @@ TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
 
         // We generated 10000 strings. We expect all 40 different lengths to be present.
         REQUIRE(length_counts.size() == 40);
+    }
+}
+
+TEST_CASE_METHOD(DatabaseFixture, "random_string casing", "[strings]") {
+    SECTION("Should produce lowercase strings by default") {
+        const auto query = std::format("FROM random_string() LIMIT {}", LIMIT);
+        const auto res = con.Query(query);
+
+        sanity_check(res);
+        for (uint32_t row = 0; row < LIMIT; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            CAPTURE(val);
+            for (char c : val) {
+                REQUIRE(std::islower(c));
+            }
+        }
+    }
+
+    SECTION("Should produce lowercase strings when specified") {
+        const auto query = std::format("FROM random_string(casing='lower') LIMIT {}", LIMIT);
+        const auto res = con.Query(query);
+
+        sanity_check(res);
+        for (uint32_t row = 0; row < LIMIT; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            CAPTURE(val);
+            for (char c : val) {
+                REQUIRE(std::islower(c));
+            }
+        }
+    }
+
+    SECTION("Should produce uppercase strings when specified") {
+        const auto query = std::format("FROM random_string(casing='upper') LIMIT {}", LIMIT);
+        const auto res = con.Query(query);
+
+        sanity_check(res);
+        for (uint32_t row = 0; row < LIMIT; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            CAPTURE(val);
+            for (char c : val) {
+                REQUIRE(std::isupper(c));
+            }
+        }
+    }
+
+    SECTION("Should produce mixed case strings when specified") {
+        const auto query = std::format("FROM random_string(length=250, casing='mixed') LIMIT {}", LIMIT);
+        const auto res = con.Query(query);
+
+        sanity_check(res);
+        for (uint32_t row = 0; row < LIMIT; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            bool has_upper = false;
+            bool has_lower = false;
+            for (char c : val) {
+                if (std::isupper(c))
+                    has_upper = true;
+                if (std::islower(c))
+                    has_lower = true;
+            }
+            CAPTURE(val);
+            // For a string of length 250, we expect to have at least one upper and one lower case letter
+            CHECK(has_upper);
+            CHECK(has_lower);
+        }
+    }
+
+    SECTION("Should reject invalid casing values") {
+        const auto query = "FROM random_string(casing='invalid')";
+        const auto res = con.Query(query);
+
+        REQUIRE(res->HasError());
+        CHECK_THAT(res->GetError(), ContainsSubstring("casing must be one of: lower, upper, mixed"));
     }
 }

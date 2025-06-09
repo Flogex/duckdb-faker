@@ -5,6 +5,7 @@
 #include "faker-cxx/number.h"
 #include "faker-cxx/string.h"
 #include "generator_global_state.hpp"
+#include "string_casing.hpp"
 
 #include <cstdint>
 
@@ -17,6 +18,7 @@ struct RandomStringFunctionData final : TableFunctionData {
     std::optional<uint64_t> length;
     std::optional<uint64_t> min_length;
     std::optional<uint64_t> max_length;
+    std::optional<StringCasing> casing;
 };
 
 struct RandomStringGlobalState final : GeneratorGlobalState {};
@@ -51,6 +53,14 @@ unique_ptr<FunctionData> RandomStringBind(ClientContext&, TableFunctionBindInput
     if (bind_data->min_length.has_value() && bind_data->max_length.has_value() &&
         bind_data->min_length.value() > bind_data->max_length.value()) {
         throw InvalidInputException("min_length cannot be greater than max_length");
+    }
+
+    if (named_parameters.contains("casing")) {
+        const auto casing_str = named_parameters.at("casing").GetValue<string>();
+        bind_data->casing = string_casing_from_string(casing_str);
+        if (!bind_data->casing.has_value()) {
+            throw InvalidInputException("casing must be one of: lower, upper, mixed");
+        }
     }
 
     return bind_data;
@@ -107,8 +117,8 @@ void RandomStringExecute(ClientContext&, TableFunctionInput& input, DataChunk& o
 
     for (idx_t idx = 0; idx < cardinality; idx++) {
         const auto string_length = get_string_length(bind_data);
-        const auto casing = faker::string::StringCasing::Lower;
-        const std::string random_string = faker::string::alpha(string_length, casing);
+        const auto casing = bind_data.casing.value_or(StringCasing::Lower);
+        const std::string random_string = faker::string::alpha(string_length, to_faker_casing(casing));
         output.SetValue(0, idx, Value(random_string));
     }
 
@@ -122,6 +132,7 @@ void RandomStringFunction::RegisterFunction(DatabaseInstance& instance) {
     random_string_function.named_parameters["length"] = LogicalType::UBIGINT;
     random_string_function.named_parameters["min_length"] = LogicalType::UBIGINT;
     random_string_function.named_parameters["max_length"] = LogicalType::UBIGINT;
+    random_string_function.named_parameters["casing"] = LogicalType::VARCHAR;
     ExtensionUtil::RegisterFunction(instance, random_string_function);
 }
 
