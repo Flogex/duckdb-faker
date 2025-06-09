@@ -47,6 +47,12 @@ unique_ptr<FunctionData> RandomStringBind(ClientContext&, TableFunctionBindInput
         bind_data->max_length = named_parameters.at("max_length").GetValue<uint64_t>();
     }
 
+    // Validate min_length and max_length if both are specified
+    if (bind_data->min_length.has_value() && bind_data->max_length.has_value() &&
+        bind_data->min_length.value() > bind_data->max_length.value()) {
+        throw InvalidInputException("min_length cannot be greater than max_length");
+    }
+
     return bind_data;
 }
 
@@ -64,20 +70,24 @@ uint64_t get_string_length(const RandomStringFunctionData& bind_data) {
         min = bind_data.min_length.value();
     }
 
-    /*
-     * For small values, we still want to have a big-enough range.
-     * For example, for minimum length 1, there should be strings generated
-     * also for length 20.
-     * For minimum length 100, the maximum length should still be in the same
-     * order of magnitude, for example 200.
-     */
-    uint64_t max = 0;
-    if (min < 10) {
-        max = 20;
-    } else if (min < UINT64_MAX / 2) {
-        max = min * 2;
+    uint64_t max;
+    if (bind_data.max_length.has_value()) {
+        max = bind_data.max_length.value();
     } else {
-        max = UINT64_MAX;
+        /*
+         * For small values, we still want to have a big-enough range.
+         * For example, for minimum length 1, there should be strings generated
+         * also for length 20.
+         * For minimum length 100, the maximum length should still be in the same
+         * order of magnitude, for example 200.
+         */
+        if (min < 10) {
+            max = 20;
+        } else if (min < UINT64_MAX / 2) {
+            max = min * 2;
+        } else {
+            max = UINT64_MAX;
+        }
     }
 
     return faker::number::integer(min, max);

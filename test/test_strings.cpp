@@ -5,6 +5,7 @@
 #include "test_helpers/database_fixture.hpp"
 
 #include <cstdint>
+#include <map>
 #include <string>
 
 using namespace duckdb_faker::test_helpers;
@@ -89,8 +90,59 @@ TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
     */
 
     SECTION("Should produce strings with given maximum length") {
+        const uint64_t max_length = GENERATE(10, 1000);
+
+        const auto query = std::format("FROM random_string(max_length={}) LIMIT {}", max_length, LIMIT);
+        const auto res = con.Query(query);
+
+        sanity_check(res);
+        for (uint32_t row = 0; row < LIMIT; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            CHECK(val.size() <= max_length);
+        }
+    }
+
+    SECTION("Should produce strings with given minimum and maximum length") {
+        const uint64_t min_length = GENERATE(10, 100);
+        const uint64_t max_length = min_length * 2;
+
+        const auto query =
+            std::format("FROM random_string(min_length={}, max_length={}) LIMIT {}", min_length, max_length, LIMIT);
+        const auto res = con.Query(query);
+
+        sanity_check(res);
+        for (uint32_t row = 0; row < LIMIT; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            CHECK(val.size() >= min_length);
+            CHECK(val.size() <= max_length);
+        }
+    }
+
+    SECTION("Should handle min_length greater than max_length") {
+        const auto query = "FROM random_string(min_length=100, max_length=50)";
+        const auto res = con.Query(query);
+
+        REQUIRE(res->HasError());
+        CHECK_THAT(res->GetError(), ContainsSubstring("min_length cannot be greater than max_length"));
     }
 
     SECTION("Should produce strings of different lengths") {
+        const uint64_t min_length = 10;
+        const uint64_t max_length = 49;
+        const uint32_t num_strings = 10000;
+
+        const auto query = std::format(
+            "FROM random_string(min_length={}, max_length={}) LIMIT {}", min_length, max_length, num_strings);
+        const auto res = con.Query(query);
+
+        std::map<uint64_t, uint32_t> length_counts;
+        for (uint32_t row = 0; row < num_strings; row++) {
+            const auto val = res->GetValue(0, row).GetValue<std::string>();
+            const auto len = val.size();
+            length_counts[len]++;
+        }
+
+        // We generated 10000 strings. We expect all 40 different lengths to be present.
+        REQUIRE(length_counts.size() == 40);
     }
 }
