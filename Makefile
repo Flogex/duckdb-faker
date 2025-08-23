@@ -26,6 +26,9 @@ build:
 debug: BUILD_TYPE=Debug
 debug: build
 
+reldebinfo: BUILD_TYPE=RelWithDebInfo
+reldebinfo: build
+
 release: BUILD_TYPE=Release
 release: build
 
