@@ -34,8 +34,12 @@ reldebinfo: build
 release: BUILD_TYPE=Release
 release: build
 
-test: BUILD_TYPE?=Release
+test: BUILD_TYPE?=Debug
 test: build
+	./build/${BUILD_TYPE}/test/unittests
+
+test_release: BUILD_TYPE=Release
+test_release: build
 	./build/${BUILD_TYPE}/test/unittests
 
 format:
