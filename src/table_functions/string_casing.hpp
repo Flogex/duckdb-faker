@@ -20,7 +20,7 @@ std::optional<StringCasing> string_casing_from_string(const std::string& casing)
     }
 }
 
-faker::string::StringCasing to_faker_casing(StringCasing casing) {
+faker::string::StringCasing to_faker_casing(const StringCasing casing) {
     switch (casing) {
     case StringCasing::Lower:
         return faker::string::StringCasing::Lower;
