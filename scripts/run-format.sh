@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 CURRENT_VERSION=$(clang-format --version | awk '{print $NF}'); \
-if [[ ! "${CURRENT_VERSION}" == 20* ]]; then
-  echo "clang-format version 20 is required"
+if [[ ! "${CURRENT_VERSION}" == 21* ]]; then
+  echo "clang-format version 21 is required"
   exit 1
 fi
 
