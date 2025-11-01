@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: configure build debug release format
+.PHONY: configure build debug release test format
 
 ifneq (${OSX_BUILD_ARCH}, "")
 	OSX_BUILD_FLAG=-DOSX_BUILD_ARCH=${OSX_BUILD_ARCH}
@@ -9,6 +9,8 @@ endif
 GENERATOR=-G "Ninja" -DFORCE_COLORED_OUTPUT=1
 EXTENSION_FLAGS=-DDUCKDB_EXTENSION_CONFIGS='${EXT_CONFIG}'
 BUILD_FLAGS=$(GENERATOR) -DEXTENSION_STATIC_BUILD=1 $(EXTENSION_FLAGS) $(OSX_BUILD_FLAG) -DDUCKDB_EXPLICIT_PLATFORM='${DUCKDB_PLATFORM}'
+
+default: release
 
 configure:
 ifeq ($(strip $(BUILD_TYPE)),)
