@@ -5,7 +5,7 @@
 #include "faker_extension.hpp"
 #include "test_helpers/database_fixture.hpp"
 
-using namespace duckdb_faker::test_helpers;
+using duckdb_faker::test_helpers::DatabaseFixture;
 
 // Currently we cut of at a maximum cardinality of 2^16
 TEST_CASE_METHOD(DatabaseFixture, "Should produce the number of rows specified by LIMIT", "[shared]") {

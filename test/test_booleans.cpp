@@ -9,7 +9,7 @@
 
 #include <cstdint>
 
-using namespace duckdb_faker::test_helpers;
+using duckdb_faker::test_helpers::DatabaseFixture;
 
 constexpr uint32_t LIMIT = 100;
 
