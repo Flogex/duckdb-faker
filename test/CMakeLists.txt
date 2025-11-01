@@ -7,17 +7,24 @@ add_subdirectory(${CATCH_DIR} ${CMAKE_CURRENT_BINARY_DIR}/catch2)
 
 set(DUCKDB_DIR ${CMAKE_CURRENT_LIST_DIR}/../submodules/duckdb)
 
-add_executable(unittests
+add_executable(
+    unittests
     test_booleans.cpp
     test_numbers.cpp
     test_shared.cpp
-    test_strings.cpp)
+    test_strings.cpp
+)
 
-target_include_directories(unittests PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/../src/include
+target_include_directories(
+    unittests
+    PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../src/include
+    PRIVATE
+    SYSTEM
     ${DUCKDB_DIR}/src/include
-    ${CATCH_DIR}/src)
-target_link_libraries(unittests PRIVATE
-    faker_extension
-    duckdb_static
-    Catch2::Catch2WithMain)
+    ${CATCH_DIR}/src
+)
+
+target_link_libraries(
+    unittests
+    PRIVATE faker_extension duckdb_static Catch2::Catch2WithMain
+)
