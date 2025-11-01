@@ -1,7 +1,7 @@
 #include "strings.hpp"
 
 #include "duckdb/common/types.hpp"
-#include "duckdb/main/extension_util.hpp"
+#include "duckdb/main/extension/extension_loader.hpp"
 #include "faker-cxx/number.h"
 #include "faker-cxx/string.h"
 #include "generator_global_state.hpp"
@@ -126,14 +126,14 @@ void RandomStringExecute(ClientContext&, TableFunctionInput& input, DataChunk& o
 }
 } // anonymous namespace
 
-void RandomStringFunction::RegisterFunction(DatabaseInstance& instance) {
+void RandomStringFunction::RegisterFunction(ExtensionLoader& loader) {
     TableFunction random_string_function(
         "random_string", {}, RandomStringExecute, RandomStringBind, RandomStringGlobalInit);
     random_string_function.named_parameters["length"] = LogicalType::UBIGINT;
     random_string_function.named_parameters["min_length"] = LogicalType::UBIGINT;
     random_string_function.named_parameters["max_length"] = LogicalType::UBIGINT;
     random_string_function.named_parameters["casing"] = LogicalType::VARCHAR;
-    ExtensionUtil::RegisterFunction(instance, random_string_function);
+    loader.RegisterFunction(random_string_function);
 }
 
 } // namespace duckdb_faker

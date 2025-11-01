@@ -1,11 +1,11 @@
 #pragma once
 
-#include "utils/database_instance.hpp"
+#include "utils/extension_loader_decl.hpp"
 
 namespace duckdb_faker {
 
 struct RandomBoolFunction {
-    static void RegisterFunction(duckdb::DatabaseInstance& instance);
+    static void RegisterFunction(duckdb::ExtensionLoader& loader);
 };
 
 } // namespace duckdb_faker

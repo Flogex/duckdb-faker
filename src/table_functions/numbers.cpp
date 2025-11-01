@@ -6,8 +6,7 @@
 #include "duckdb/common/vector.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/function/table_function.hpp"
-#include "duckdb/main/database.hpp"
-#include "duckdb/main/extension_util.hpp"
+#include "duckdb/main/extension/extension_loader.hpp"
 #include "faker-cxx/number.h"
 #include "generator_global_state.hpp"
 #include "probability_distributions.hpp"
@@ -95,12 +94,12 @@ void RandomIntExecute(ClientContext&, TableFunctionInput& input, DataChunk& outp
 }
 } // anonymous namespace
 
-void RandomIntFunction::RegisterFunction(DatabaseInstance& instance) {
+void RandomIntFunction::RegisterFunction(ExtensionLoader& loader) {
     TableFunction random_int_function("random_int", {}, RandomIntExecute, RandomIntBind, RandomIntGlobalInit);
     random_int_function.named_parameters["min"] = LogicalType::INTEGER;
     random_int_function.named_parameters["max"] = LogicalType::INTEGER;
     random_int_function.named_parameters["distribution"] = LogicalType::VARCHAR;
-    ExtensionUtil::RegisterFunction(instance, random_int_function);
+    loader.RegisterFunction(random_int_function);
 }
 
 } // namespace duckdb_faker

@@ -2,19 +2,21 @@
 
 #include "faker_extension.hpp"
 
-#include "duckdb/common/types.hpp"
-#include "duckdb/main/database.hpp"
+#include "duckdb/main/extension/extension_loader.hpp"
 #include "table_functions/booleans.hpp"
 #include "table_functions/numbers.hpp"
 #include "table_functions/strings.hpp"
 
 namespace duckdb {
 
-void FakerExtension::Load(DuckDB& db) {
-    DatabaseInstance& instance = *db.instance;
-    duckdb_faker::RandomBoolFunction::RegisterFunction(instance);
-    duckdb_faker::RandomIntFunction::RegisterFunction(instance);
-    duckdb_faker::RandomStringFunction::RegisterFunction(instance);
+void FakerExtension::LoadInternal(ExtensionLoader& loader) {
+    duckdb_faker::RandomBoolFunction::RegisterFunction(loader);
+    duckdb_faker::RandomIntFunction::RegisterFunction(loader);
+    duckdb_faker::RandomStringFunction::RegisterFunction(loader);
+}
+
+void FakerExtension::Load(ExtensionLoader& loader) {
+    LoadInternal(loader);
 }
 
 std::string FakerExtension::Name() {
@@ -24,21 +26,10 @@ std::string FakerExtension::Name() {
 std::string FakerExtension::Version() const {
     return "0.1";
 }
-
 } // namespace duckdb
 
 extern "C" {
-
-DUCKDB_EXTENSION_API void faker_init(duckdb::DatabaseInstance& db) {
-    duckdb::DuckDB db_wrapper(db);
-    db_wrapper.LoadExtension<duckdb::FakerExtension>();
-}
-
-DUCKDB_EXTENSION_API const char* faker_version() {
-    return duckdb::DuckDB::LibraryVersion();
+DUCKDB_CPP_EXTENSION_ENTRY(faker, ext_loader) {
+    duckdb::FakerExtension::LoadInternal(ext_loader);
 }
 }
-
-#ifndef DUCKDB_EXTENSION_MAIN
-#error DUCKDB_EXTENSION_MAIN not defined
-#endif

@@ -6,11 +6,10 @@
 #include "duckdb/common/vector.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/function/table_function.hpp"
-#include "duckdb/main/database.hpp"
-#include "duckdb/main/extension_util.hpp"
+#include "duckdb/main/extension/extension_loader.hpp"
 #include "faker-cxx/datatype.h"
 #include "generator_global_state.hpp"
-#include "utils/client_context.hpp"
+#include "utils/client_context_decl.hpp"
 
 #include <optional>
 
@@ -84,10 +83,10 @@ void RandomBoolExecute(ClientContext&, TableFunctionInput& input, DataChunk& out
 }
 } // anonymous namespace
 
-void RandomBoolFunction::RegisterFunction(DatabaseInstance& instance) {
+void RandomBoolFunction::RegisterFunction(ExtensionLoader& loader) {
     TableFunction random_bool_function("random_bool", {}, RandomBoolExecute, RandomBoolBind, RandomBoolGlobalInit);
     random_bool_function.named_parameters["true_probability"] = LogicalType::DOUBLE;
-    ExtensionUtil::RegisterFunction(instance, random_bool_function);
+    loader.RegisterFunction(random_bool_function);
 }
 
 } // namespace duckdb_faker
