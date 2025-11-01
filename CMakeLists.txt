@@ -11,7 +11,9 @@ set(LOADABLE_EXTENSION_NAME ${TARGET_NAME}_loadable_extension)
 set(SOURCE_FILES
     src/faker_extension.cpp
     src/table_functions/booleans.cpp
+    src/table_functions/generator_global_state.cpp
     src/table_functions/numbers.cpp
+    src/table_functions/rowid_generator.cpp
     src/table_functions/strings.cpp)
 
 add_subdirectory(submodules/duckdb ${CMAKE_BINARY_DIR}/duckdb)

@@ -1,17 +1,21 @@
 #include "booleans.hpp"
 
+#include "duckdb/common/assert.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/types.hpp"
 #include "duckdb/common/types/data_chunk.hpp"
+#include "duckdb/common/unique_ptr.hpp"
 #include "duckdb/common/vector.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/function/table_function.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
 #include "faker-cxx/datatype.h"
 #include "generator_global_state.hpp"
+#include "rowid_generator.hpp"
 #include "utils/client_context_decl.hpp"
 
 #include <optional>
+#include <string>
 
 using namespace duckdb;
 
@@ -24,7 +28,10 @@ struct RandomBoolFunctionData final : TableFunctionData {
     std::optional<bool> constant_value;
 };
 
-struct RandomBoolGlobalState final : GeneratorGlobalState {};
+struct RandomBoolGlobalState final : GeneratorGlobalState {
+    explicit RandomBoolGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
+    }
+};
 
 unique_ptr<FunctionData> RandomBoolBind(ClientContext&, TableFunctionBindInput& input,
                                         vector<LogicalType>& return_types, vector<string>& names) {
@@ -52,12 +59,11 @@ unique_ptr<FunctionData> RandomBoolBind(ClientContext&, TableFunctionBindInput& 
     return bind_data;
 }
 
-unique_ptr<GlobalTableFunctionState> RandomBoolGlobalInit(ClientContext&, TableFunctionInitInput&) {
-    return make_uniq<RandomBoolGlobalState>();
+unique_ptr<GlobalTableFunctionState> RandomBoolGlobalInit(ClientContext&, TableFunctionInitInput& input) {
+    return make_uniq<RandomBoolGlobalState>(input);
 }
 
 void RandomBoolExecute(ClientContext&, TableFunctionInput& input, DataChunk& output) {
-    D_ASSERT(output.ColumnCount() == 1);
     auto& state = input.global_state->Cast<RandomBoolGlobalState>();
 
     D_ASSERT(state.num_generated_rows <= state.max_generated_rows); // We don't want to underflow
@@ -65,18 +71,39 @@ void RandomBoolExecute(ClientContext&, TableFunctionInput& input, DataChunk& out
     const idx_t cardinality = num_remaining_rows < STANDARD_VECTOR_SIZE ? num_remaining_rows : STANDARD_VECTOR_SIZE;
     output.SetCardinality(cardinality);
 
+    if (state.column_indexes.value_idx.IsValid() && state.column_indexes.rowid_idx.IsValid()) {
+        D_ASSERT(output.ColumnCount() == 2);
+    } else {
+        D_ASSERT(output.ColumnCount() == 1);
+    }
+
     const auto& bind_data = input.bind_data->Cast<RandomBoolFunctionData>();
     const double true_probability = bind_data.true_probability.value_or(0.5);
 
-    auto output_vector = output.data[0];
-    D_ASSERT(output_vector.GetType().id() == LogicalTypeId::BOOLEAN);
-    if (bind_data.constant_value.has_value()) {
-        output_vector.SetVectorType(VectorType::CONSTANT_VECTOR);
+    const optional_idx value_col_idx = state.column_indexes.value_idx;
+    if (value_col_idx.IsValid()) {
+        Vector value_vector = output.data[value_col_idx.GetIndex()];
+        D_ASSERT(value_vector.GetType().id() == LogicalTypeId::BOOLEAN);
+
+        if (bind_data.constant_value.has_value()) {
+            value_vector.SetVectorType(VectorType::CONSTANT_VECTOR);
+            const Value constant_val(bind_data.constant_value.value());
+            for (idx_t row_idx = 0; row_idx < cardinality; row_idx++) {
+                value_vector.SetValue(row_idx, constant_val);
+            }
+        } else {
+            D_ASSERT(value_vector.GetVectorType() == VectorType::FLAT_VECTOR);
+            for (idx_t row_idx = 0; row_idx < cardinality; row_idx++) {
+                const bool random_bool = faker::datatype::boolean(true_probability);
+                // TODO: This should be changed to write directly to the vector data (+ validity mask)
+                value_vector.SetValue(row_idx, Value(random_bool));
+            }
+        }
     }
 
-    for (idx_t idx = 0; idx < cardinality; idx++) {
-        const bool val = bind_data.constant_value.value_or(faker::datatype::boolean(true_probability));
-        output_vector.SetValue(idx, Value(val));
+    const auto rowid_col_idx = state.column_indexes.rowid_idx;
+    if (rowid_col_idx.IsValid()) {
+        rowid_generator::PopulateRowIdColumn(state.num_generated_rows, rowid_col_idx, output);
     }
 
     state.num_generated_rows += cardinality;
@@ -86,6 +113,9 @@ void RandomBoolExecute(ClientContext&, TableFunctionInput& input, DataChunk& out
 void RandomBoolFunction::RegisterFunction(ExtensionLoader& loader) {
     TableFunction random_bool_function("random_bool", {}, RandomBoolExecute, RandomBoolBind, RandomBoolGlobalInit);
     random_bool_function.named_parameters["true_probability"] = LogicalType::DOUBLE;
+    random_bool_function.projection_pushdown = true;
+    random_bool_function.get_virtual_columns = rowid_generator::GetVirtualColumns;
+    random_bool_function.get_row_id_columns = rowid_generator::GetRowIdColumns;
     loader.RegisterFunction(random_bool_function);
 }
 

@@ -1,8 +1,10 @@
 #include "numbers.hpp"
 
+#include "duckdb/common/assert.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/types.hpp"
 #include "duckdb/common/types/data_chunk.hpp"
+#include "duckdb/common/unique_ptr.hpp"
 #include "duckdb/common/vector.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/function/table_function.hpp"
@@ -10,6 +12,8 @@
 #include "faker-cxx/number.h"
 #include "generator_global_state.hpp"
 #include "probability_distributions.hpp"
+#include "rowid_generator.hpp"
+#include "utils/client_context_decl.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -17,10 +21,6 @@
 #include <string>
 
 using namespace duckdb;
-
-namespace duckdb {
-class ClientContext;
-}
 
 namespace duckdb_faker {
 
@@ -31,7 +31,10 @@ struct RandomIntFunctionData final : TableFunctionData {
     std::optional<ProbabilityDistribution::Type> distribution;
 };
 
-struct RandomIntGlobalState final : GeneratorGlobalState {};
+struct RandomIntGlobalState final : GeneratorGlobalState {
+    explicit RandomIntGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
+    }
+};
 
 unique_ptr<FunctionData> RandomIntBind(ClientContext&, TableFunctionBindInput& input, vector<LogicalType>& return_types,
                                        vector<string>& names) {
@@ -63,16 +66,23 @@ unique_ptr<FunctionData> RandomIntBind(ClientContext&, TableFunctionBindInput& i
     return bind_data;
 }
 
-unique_ptr<GlobalTableFunctionState> RandomIntGlobalInit(ClientContext&, TableFunctionInitInput&) {
-    return make_uniq<RandomIntGlobalState>();
+unique_ptr<GlobalTableFunctionState> RandomIntGlobalInit(ClientContext&, TableFunctionInitInput& input) {
+    return make_uniq<RandomIntGlobalState>(input);
 }
 
 void RandomIntExecute(ClientContext&, TableFunctionInput& input, DataChunk& output) {
-    D_ASSERT(output.ColumnCount() == 1);
     auto& state = input.global_state->Cast<RandomIntGlobalState>();
 
     D_ASSERT(state.num_generated_rows <= state.max_generated_rows); // We don't want to underflow
     const auto num_remaining_rows = state.max_generated_rows - state.num_generated_rows;
+    const idx_t cardinality = num_remaining_rows < STANDARD_VECTOR_SIZE ? num_remaining_rows : STANDARD_VECTOR_SIZE;
+    output.SetCardinality(cardinality);
+
+    if (state.column_indexes.value_idx.IsValid() && state.column_indexes.rowid_idx.IsValid()) {
+        D_ASSERT(output.ColumnCount() == 2);
+    } else {
+        D_ASSERT(output.ColumnCount() == 1);
+    }
 
     const auto& bind_data = input.bind_data->Cast<RandomIntFunctionData>();
     const int32_t min = bind_data.min.value_or(std::numeric_limits<int32_t>::min());
@@ -80,14 +90,24 @@ void RandomIntExecute(ClientContext&, TableFunctionInput& input, DataChunk& outp
     const ProbabilityDistribution::Type distribution =
         bind_data.distribution.value_or(ProbabilityDistribution::Type::UNIFORM);
 
-    const idx_t cardinality = num_remaining_rows < STANDARD_VECTOR_SIZE ? num_remaining_rows : STANDARD_VECTOR_SIZE;
-    output.SetCardinality(cardinality);
+    const optional_idx value_col_idx = state.column_indexes.value_idx;
+    if (value_col_idx.IsValid()) {
+        Vector value_vector = output.data[value_col_idx.GetIndex()];
+        D_ASSERT(value_vector.GetType().id() == LogicalTypeId::INTEGER);
+        D_ASSERT(value_vector.GetVectorType() == VectorType::FLAT_VECTOR);
 
-    if (distribution == ProbabilityDistribution::Type::UNIFORM) {
-        for (idx_t idx = 0; idx < cardinality; idx++) {
-            const int32_t random_num = faker::number::integer(min, max);
-            output.SetValue(0, idx, Value(random_num));
+        // We only support one distribution for now
+        if (distribution == ProbabilityDistribution::Type::UNIFORM) {
+            for (idx_t row_idx = 0; row_idx < cardinality; row_idx++) {
+                const int32_t random_num = faker::number::integer(min, max);
+                value_vector.SetValue(row_idx, Value(random_num));
+            }
         }
+    }
+
+    const auto rowid_col_idx = state.column_indexes.rowid_idx;
+    if (rowid_col_idx.IsValid()) {
+        rowid_generator::PopulateRowIdColumn(state.num_generated_rows, rowid_col_idx, output);
     }
 
     state.num_generated_rows += cardinality;
@@ -99,6 +119,9 @@ void RandomIntFunction::RegisterFunction(ExtensionLoader& loader) {
     random_int_function.named_parameters["min"] = LogicalType::INTEGER;
     random_int_function.named_parameters["max"] = LogicalType::INTEGER;
     random_int_function.named_parameters["distribution"] = LogicalType::VARCHAR;
+    random_int_function.projection_pushdown = true;
+    random_int_function.get_virtual_columns = rowid_generator::GetVirtualColumns;
+    random_int_function.get_row_id_columns = rowid_generator::GetRowIdColumns;
     loader.RegisterFunction(random_int_function);
 }
 
