@@ -2,7 +2,6 @@
 #include "catch2/generators/catch_generators.hpp"
 #include "duckdb/main/connection.hpp"
 #include "duckdb/main/database.hpp"
-#include "faker_extension.hpp"
 #include "test_helpers/database_fixture.hpp"
 
 #include <cstdint>
@@ -21,7 +20,7 @@ static void sanity_check(const duckdb::unique_ptr<duckdb::MaterializedQueryResul
     REQUIRE(res->Collection().ChunkCount() == 1);
 }
 
-TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
+TEST_CASE_METHOD(DatabaseFixture, "random_int bounds checks", "[numbers][integers]") {
     SECTION("Should only produce numbers greater or equal to minimum") {
         const int32_t min = GENERATE(-100, 0, 100);
 
@@ -74,18 +73,23 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
         REQUIRE(res->HasError());
         REQUIRE(res->GetError() == "Invalid Input Error: Minimum value must be less than or equal to maximum value");
     }
+}
 
-    SECTION("Should produce uniform distribution by default", "[!mayfail]") {
+TEST_CASE_METHOD(DatabaseFixture, "random_int distributions", "[numbers][integers]") {
+    auto test_uniform_distribution = [&](const std::string& distribution_param = "") {
         constexpr uint32_t min = 1;
         constexpr uint32_t max = 4;
         constexpr uint32_t limit = 10000;
 
+        const auto distribution_clause =
+            distribution_param.empty() ? "" : std::format(", distribution='{}'", distribution_param);
         const auto query = std::format("SELECT value, COUNT(1) FROM "
-                                       "(FROM random_int(min={}, max={}) LIMIT {}) "
+                                       "(FROM random_int(min={}, max={}{}) LIMIT {}) "
                                        "GROUP BY value "
                                        "ORDER BY value",
                                        min,
                                        max,
+                                       distribution_clause,
                                        limit);
         const auto res = con.Query(query);
 
@@ -101,6 +105,14 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int", "[numbers]") {
             CHECK(num_of_occurrences >= lower_bound);
             CHECK(num_of_occurrences <= upper_bound);
         }
+    };
+
+    SECTION("Should produce uniform distribution by default", "[!mayfail]") {
+        test_uniform_distribution();
+    }
+
+    SECTION("Should produce uniform distribution when explicitly specified", "[!mayfail]") {
+        test_uniform_distribution("uniform");
     }
 
     SECTION("Should reject unknown distribution arguments") {
