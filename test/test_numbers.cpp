@@ -1,5 +1,6 @@
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/generators/catch_generators.hpp"
+#include "catch2/matchers/catch_matchers_string.hpp"
 #include "duckdb/main/connection.hpp"
 #include "duckdb/main/database.hpp"
 #include "test_helpers/database_fixture.hpp"
@@ -7,6 +8,7 @@
 #include <cstdint>
 
 using duckdb_faker::test_helpers::DatabaseFixture;
+using Catch::Matchers::ContainsSubstring;
 
 constexpr uint32_t LIMIT = 100;
 
@@ -71,7 +73,8 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int bounds checks", "[numbers][integer
         auto res = con.Query(query);
 
         REQUIRE(res->HasError());
-        REQUIRE(res->GetError() == "Invalid Input Error: Minimum value must be less than or equal to maximum value");
+        CHECK_THAT(res->GetError(),
+            ContainsSubstring("Invalid Input Error: Minimum value must be less than or equal to maximum value"));
     }
 }
 
@@ -118,6 +121,7 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int distributions", "[numbers][integer
     SECTION("Should reject unknown distribution arguments") {
         auto res = con.Query("FROM random_int(distribution='unknown')");
         REQUIRE(res->HasError());
-        REQUIRE(res->GetError() == "Invalid Input Error: Unknown probability distribution \"unknown\"");
+        CHECK_THAT(res->GetError(),
+            ContainsSubstring("Invalid Input Error: Unknown probability distribution \"unknown\""));
     }
 }

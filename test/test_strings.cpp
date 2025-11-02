@@ -42,6 +42,7 @@ TEST_CASE_METHOD(DatabaseFixture, "random_string", "[strings]") {
         for (uint32_t row = 0; row < LIMIT; row++) {
             const auto val = res->GetValue(0, row).GetValue<std::string>();
             for (char c : val) {
+                CAPTURE(c);
                 CHECK(std::isalpha(c));
             }
         }
