@@ -134,7 +134,7 @@ void RandomStringExecute(ClientContext&, TableFunctionInput& input, DataChunk& o
 
     const optional_idx value_col_idx = state.column_indexes.value_idx;
     if (value_col_idx.IsValid()) {
-        Vector value_vector = output.data[value_col_idx.GetIndex()];
+        Vector& value_vector = output.data[value_col_idx.GetIndex()];
         D_ASSERT(value_vector.GetType().id() == LogicalTypeId::VARCHAR);
         D_ASSERT(value_vector.GetVectorType() == VectorType::FLAT_VECTOR);
 

@@ -33,7 +33,7 @@ void PopulateRowIdColumn(const uint64_t start_rowid, const optional_idx rowid_co
 
     const idx_t cardinality = output.size();
 
-    auto& rowid_vector = output.data[rowid_column_idx.GetIndex()];
+    Vector& rowid_vector = output.data[rowid_column_idx.GetIndex()];
     D_ASSERT(rowid_vector.GetType().id() == LogicalType::ROW_TYPE);
     D_ASSERT(rowid_vector.GetVectorType() == VectorType::FLAT_VECTOR);
 

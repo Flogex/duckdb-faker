@@ -92,7 +92,7 @@ void RandomIntExecute(ClientContext&, TableFunctionInput& input, DataChunk& outp
 
     const optional_idx value_col_idx = state.column_indexes.value_idx;
     if (value_col_idx.IsValid()) {
-        Vector value_vector = output.data[value_col_idx.GetIndex()];
+        Vector& value_vector = output.data[value_col_idx.GetIndex()];
         D_ASSERT(value_vector.GetType().id() == LogicalTypeId::INTEGER);
         D_ASSERT(value_vector.GetVectorType() == VectorType::FLAT_VECTOR);
 
