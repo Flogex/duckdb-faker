@@ -10,8 +10,8 @@
 #include <map>
 #include <string>
 
-using duckdb_faker::test_helpers::DatabaseFixture;
 using Catch::Matchers::ContainsSubstring;
+using duckdb_faker::test_helpers::DatabaseFixture;
 
 constexpr uint32_t LIMIT = 100;
 

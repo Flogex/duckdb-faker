@@ -86,7 +86,7 @@ void RandomBoolExecute(ClientContext&, TableFunctionInput& input, DataChunk& out
         Vector& value_vector = output.data[value_col_idx.GetIndex()];
         D_ASSERT(value_vector.GetType().id() == LogicalTypeId::BOOLEAN);
 
-        //TODO: Handle validity mask once NULLs are supported
+        // TODO: Handle validity mask once NULLs are supported
         if (bind_data.constant_value.has_value()) {
             value_vector.SetVectorType(VectorType::CONSTANT_VECTOR);
             bool* data = ConstantVector::GetData<bool>(value_vector);

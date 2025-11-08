@@ -12,7 +12,7 @@ class ClientContext;
 class DataChunk;
 struct FunctionData;
 class optional_idx;
-}
+} // namespace duckdb
 
 namespace duckdb_faker::rowid_generator {
 
@@ -21,4 +21,4 @@ duckdb::vector<duckdb::column_t> GetRowIdColumns(duckdb::ClientContext&, duckdb:
 
 void PopulateRowIdColumn(uint64_t start_rowid, duckdb::optional_idx rowid_column_idx, duckdb::DataChunk& output);
 
-} // namespace duckdb_faker::shared_generator
+} // namespace duckdb_faker::rowid_generator

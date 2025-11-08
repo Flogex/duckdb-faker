@@ -26,11 +26,11 @@ GeneratorColumnIndexes get_column_indexes(const TableFunctionInitInput& input) {
     }
 
     // At least one of the columns should be projected
-    D_ASSERT(column_indexes.value_idx.IsValid() ||column_indexes.rowid_idx.IsValid());
+    D_ASSERT(column_indexes.value_idx.IsValid() || column_indexes.rowid_idx.IsValid());
 
     return column_indexes;
 }
-}
+} // namespace
 
 GeneratorGlobalState::GeneratorGlobalState(const TableFunctionInitInput& input) {
     column_indexes = get_column_indexes(input);

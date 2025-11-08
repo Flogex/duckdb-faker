@@ -73,9 +73,9 @@ TEST_CASE_METHOD(DatabaseFixture, "random_data source_schema", "[mixed_types]") 
     SECTION("Can be used to insert into an existing table") {
         con.Query("CREATE TABLE my_tbl (a INT, b BOOLEAN)");
         const std::string query = "INSERT INTO my_tbl (b, a) "
-                          "SELECT b, a "
-                          "FROM random_data(schema_source='my_tbl') "
-                          "LIMIT 10";
+                                  "SELECT b, a "
+                                  "FROM random_data(schema_source='my_tbl') "
+                                  "LIMIT 10";
         const auto insert_res = con.Query(query);
         REQUIRE_FALSE(insert_res->HasError());
 

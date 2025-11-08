@@ -11,7 +11,7 @@ if [[ -z "${DISABLE_CLANG_FORMAT}" || "${DISABLE_CLANG_FORMAT}" == "0" ]]; then
   if [[ -n "$SOURCE_FILES" ]]; then
     echo "Formatting C++ files:"
     echo "$SOURCE_FILES"
-    clang-format -i -style=file "$SOURCE_FILES"
+    echo "$SOURCE_FILES" | xargs clang-format -i --style=file
   fi
 fi
 
@@ -20,7 +20,7 @@ if [[ -z "${DISABLE_CMAKE_FORMAT}" || "${DISABLE_CMAKE_FORMAT}" == "0" ]]; then
   if [[ -n "$CMAKE_FILES" ]]; then
     echo "Formatting CMake files:"
     echo "$CMAKE_FILES"
-    gersemi -i "$CMAKE_FILES"
+    echo "$CMAKE_FILES" | xargs gersemi -i
   fi
 fi
 

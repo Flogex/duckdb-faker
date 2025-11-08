@@ -7,8 +7,8 @@
 #include "duckdb/common/vector.hpp"
 #include "duckdb/execution/operator/scan/physical_table_scan.hpp"
 #include "duckdb/function/table_function.hpp"
-#include "duckdb/main/extension/extension_loader.hpp"
 #include "duckdb/main/client_context.hpp"
+#include "duckdb/main/extension/extension_loader.hpp"
 #include "duckdb/parser/column_definition.hpp"
 #include "duckdb/parser/parser.hpp"
 #include "duckdb/parser/qualified_name.hpp"
@@ -24,7 +24,7 @@ using namespace duckdb;
 namespace duckdb_faker {
 
 namespace {
-std::string logical_type_to_generator_name(const LogicalType &type) {
+std::string logical_type_to_generator_name(const LogicalType& type) {
     switch (type.id()) {
     case LogicalTypeId::BOOLEAN:
         return "random_bool";
@@ -39,7 +39,7 @@ std::string logical_type_to_generator_name(const LogicalType &type) {
     }
 }
 
-unique_ptr<TableRef> RandomDataBindReplace(ClientContext &context, TableFunctionBindInput &input) {
+unique_ptr<TableRef> RandomDataBindReplace(ClientContext& context, TableFunctionBindInput& input) {
     const auto schema_source_it = input.named_parameters.find("schema_source");
     if (schema_source_it == input.named_parameters.cend()) {
         throw InvalidInputException("Missing required named parameter: schema_source");
@@ -50,11 +50,10 @@ unique_ptr<TableRef> RandomDataBindReplace(ClientContext &context, TableFunction
     Binder::BindSchemaOrCatalog(context, catalog, schema);
     // TODO: Can we also have views as source?
     // This throws if the entry is not found
-    CatalogEntry& entry = Catalog::GetEntry(
-        context, CatalogType::TABLE_ENTRY, catalog, schema, entry_name);
+    CatalogEntry& entry = Catalog::GetEntry(context, CatalogType::TABLE_ENTRY, catalog, schema, entry_name);
 
     D_ASSERT(entry.type == TableCatalogEntry::Type);
-    const auto &table_entry = entry.Cast<TableCatalogEntry>();
+    const auto& table_entry = entry.Cast<TableCatalogEntry>();
 
     // TODO: What if the table has generated columns?
     if (table_entry.HasGeneratedColumns()) {
@@ -99,8 +98,7 @@ unique_ptr<TableRef> RandomDataBindReplace(ClientContext &context, TableFunction
 
     Parser parser(context.GetParserOptions());
     parser.ParseQuery(subquery.str());
-    auto select_stmt = unique_ptr_cast<SQLStatement, SelectStatement>(
-        std::move(parser.statements[0]));
+    auto select_stmt = unique_ptr_cast<SQLStatement, SelectStatement>(std::move(parser.statements[0]));
 
     return duckdb::make_uniq_base<TableRef, SubqueryRef>(std::move(select_stmt));
 }

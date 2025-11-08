@@ -7,8 +7,8 @@
 
 #include <cstdint>
 
-using duckdb_faker::test_helpers::DatabaseFixture;
 using Catch::Matchers::ContainsSubstring;
+using duckdb_faker::test_helpers::DatabaseFixture;
 
 constexpr uint32_t LIMIT = 100;
 
@@ -74,7 +74,7 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int bounds checks", "[numbers][integer
 
         REQUIRE(res->HasError());
         CHECK_THAT(res->GetError(),
-            ContainsSubstring("Invalid Input Error: Minimum value must be less than or equal to maximum value"));
+                   ContainsSubstring("Invalid Input Error: Minimum value must be less than or equal to maximum value"));
     }
 }
 
@@ -122,6 +122,6 @@ TEST_CASE_METHOD(DatabaseFixture, "random_int distributions", "[numbers][integer
         auto res = con.Query("FROM random_int(distribution='unknown')");
         REQUIRE(res->HasError());
         CHECK_THAT(res->GetError(),
-            ContainsSubstring("Invalid Input Error: Unknown probability distribution \"unknown\""));
+                   ContainsSubstring("Invalid Input Error: Unknown probability distribution \"unknown\""));
     }
 }

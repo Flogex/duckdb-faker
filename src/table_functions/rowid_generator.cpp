@@ -49,4 +49,4 @@ void PopulateRowIdColumn(const uint64_t start_rowid, const optional_idx rowid_co
     // No need to modify the validity mask because rowid is never NULL
 }
 
-} // namespace duckdb_faker::shared_generator
+} // namespace duckdb_faker::rowid_generator
