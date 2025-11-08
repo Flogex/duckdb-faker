@@ -44,7 +44,7 @@ target_link_libraries(${LOADABLE_EXTENSION_NAME} faker-cxx)
 
 add_subdirectory(test)
 
-add_dependencies(${LOADABLE_EXTENSION_NAME} duckdb)
+add_dependencies(${LOADABLE_EXTENSION_NAME} duckdb shell)
 add_custom_command(TARGET ${LOADABLE_EXTENSION_NAME} POST_BUILD
     COMMAND ${PROJECT_BINARY_DIR}/duckdb/duckdb -c "FORCE INSTALL '${PROJECT_BINARY_DIR}/${TARGET_NAME}.duckdb_extension'"
     COMMENT "Installing Faker extension in DuckDB"
