@@ -14,6 +14,7 @@
 #include "rowid_generator.hpp"
 #include "utils/client_context_decl.hpp"
 
+#include <algorithm>
 #include <optional>
 #include <string>
 
@@ -85,18 +86,17 @@ void RandomBoolExecute(ClientContext&, TableFunctionInput& input, DataChunk& out
         Vector& value_vector = output.data[value_col_idx.GetIndex()];
         D_ASSERT(value_vector.GetType().id() == LogicalTypeId::BOOLEAN);
 
+        //TODO: Handle validity mask once NULLs are supported
         if (bind_data.constant_value.has_value()) {
             value_vector.SetVectorType(VectorType::CONSTANT_VECTOR);
-            const Value constant_val(bind_data.constant_value.value());
-            for (idx_t row_idx = 0; row_idx < cardinality; row_idx++) {
-                value_vector.SetValue(row_idx, constant_val);
-            }
+            bool* data = ConstantVector::GetData<bool>(value_vector);
+            std::fill_n(data, cardinality, bind_data.constant_value.value());
         } else {
             D_ASSERT(value_vector.GetVectorType() == VectorType::FLAT_VECTOR);
+            auto data = FlatVector::GetData<bool>(value_vector);
             for (idx_t row_idx = 0; row_idx < cardinality; row_idx++) {
                 const bool random_bool = faker::datatype::boolean(true_probability);
-                // TODO: This should be changed to write directly to the vector data (+ validity mask)
-                value_vector.SetValue(row_idx, Value(random_bool));
+                data[row_idx] = random_bool;
             }
         }
     }

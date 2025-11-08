@@ -94,13 +94,15 @@ void RandomIntExecute(ClientContext&, TableFunctionInput& input, DataChunk& outp
     if (value_col_idx.IsValid()) {
         Vector& value_vector = output.data[value_col_idx.GetIndex()];
         D_ASSERT(value_vector.GetType().id() == LogicalTypeId::INTEGER);
+        D_ASSERT(LogicalType(LogicalType::INTEGER).InternalType() == duckdb::GetTypeId<int32_t>());
         D_ASSERT(value_vector.GetVectorType() == VectorType::FLAT_VECTOR);
+        int32_t* data = FlatVector::GetData<int32_t>(value_vector);
 
         // We only support one distribution for now
         if (distribution == ProbabilityDistribution::Type::UNIFORM) {
             for (idx_t row_idx = 0; row_idx < cardinality; row_idx++) {
                 const int32_t random_num = faker::number::integer(min, max);
-                value_vector.SetValue(row_idx, Value(random_num));
+                data[row_idx] = random_num;
             }
         }
     }

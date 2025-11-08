@@ -35,13 +35,14 @@ void PopulateRowIdColumn(const uint64_t start_rowid, const optional_idx rowid_co
 
     Vector& rowid_vector = output.data[rowid_column_idx.GetIndex()];
     D_ASSERT(rowid_vector.GetType().id() == LogicalType::ROW_TYPE);
+    D_ASSERT(LogicalType(LogicalType::ROW_TYPE).InternalType() == duckdb::GetTypeId<int64_t>());
     D_ASSERT(rowid_vector.GetVectorType() == VectorType::FLAT_VECTOR);
 
     if (cardinality > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()) - start_rowid) {
         throw InvalidInputException("Row ID overflow: cannot generate row IDs beyond INT64_MAX");
     }
 
-    auto rowid_data = FlatVector::GetData<int64_t>(rowid_vector);
+    int64_t* rowid_data = FlatVector::GetData<int64_t>(rowid_vector);
     for (idx_t relative_rowid = 0; relative_rowid < cardinality; relative_rowid++) {
         rowid_data[relative_rowid] = static_cast<int64_t>(start_rowid + relative_rowid);
     }
