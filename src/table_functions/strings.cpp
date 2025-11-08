@@ -31,8 +31,8 @@ struct RandomStringFunctionData final : TableFunctionData {
     std::optional<StringCasing> casing;
 };
 
-struct RandomStringGlobalState final : GeneratorGlobalState {
-    explicit RandomStringGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
+struct StringGeneratorGlobalState final : GeneratorGlobalState {
+    explicit StringGeneratorGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
     }
 };
 
@@ -80,7 +80,7 @@ unique_ptr<FunctionData> RandomStringBind(ClientContext&, TableFunctionBindInput
 }
 
 unique_ptr<GlobalTableFunctionState> RandomStringGlobalInit(ClientContext&, TableFunctionInitInput& input) {
-    return make_uniq<RandomStringGlobalState>(input);
+    return make_uniq<StringGeneratorGlobalState>(input);
 }
 
 uint64_t get_string_length(const RandomStringFunctionData& bind_data) {
@@ -117,7 +117,7 @@ uint64_t get_string_length(const RandomStringFunctionData& bind_data) {
 }
 
 void RandomStringExecute(ClientContext&, TableFunctionInput& input, DataChunk& output) {
-    auto& state = input.global_state->Cast<RandomStringGlobalState>();
+    auto& state = input.global_state->Cast<StringGeneratorGlobalState>();
 
     D_ASSERT(state.num_generated_rows <= state.max_generated_rows); // We don't want to underflow
     const auto num_remaining_rows = state.max_generated_rows - state.num_generated_rows;

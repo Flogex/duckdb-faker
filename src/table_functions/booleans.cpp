@@ -29,8 +29,8 @@ struct RandomBoolFunctionData final : TableFunctionData {
     std::optional<bool> constant_value;
 };
 
-struct RandomBoolGlobalState final : GeneratorGlobalState {
-    explicit RandomBoolGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
+struct BoolGeneratorGlobalState final : GeneratorGlobalState {
+    explicit BoolGeneratorGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
     }
 };
 
@@ -61,11 +61,11 @@ unique_ptr<FunctionData> RandomBoolBind(ClientContext&, TableFunctionBindInput& 
 }
 
 unique_ptr<GlobalTableFunctionState> RandomBoolGlobalInit(ClientContext&, TableFunctionInitInput& input) {
-    return make_uniq<RandomBoolGlobalState>(input);
+    return make_uniq<BoolGeneratorGlobalState>(input);
 }
 
 void RandomBoolExecute(ClientContext&, TableFunctionInput& input, DataChunk& output) {
-    auto& state = input.global_state->Cast<RandomBoolGlobalState>();
+    auto& state = input.global_state->Cast<BoolGeneratorGlobalState>();
 
     D_ASSERT(state.num_generated_rows <= state.max_generated_rows); // We don't want to underflow
     const auto num_remaining_rows = state.max_generated_rows - state.num_generated_rows;

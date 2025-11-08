@@ -31,8 +31,8 @@ struct RandomIntFunctionData final : TableFunctionData {
     std::optional<ProbabilityDistribution::Type> distribution;
 };
 
-struct RandomIntGlobalState final : GeneratorGlobalState {
-    explicit RandomIntGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
+struct IntGeneratorGlobalState final : GeneratorGlobalState {
+    explicit IntGeneratorGlobalState(const TableFunctionInitInput& input) : GeneratorGlobalState(input) {
     }
 };
 
@@ -67,11 +67,11 @@ unique_ptr<FunctionData> RandomIntBind(ClientContext&, TableFunctionBindInput& i
 }
 
 unique_ptr<GlobalTableFunctionState> RandomIntGlobalInit(ClientContext&, TableFunctionInitInput& input) {
-    return make_uniq<RandomIntGlobalState>(input);
+    return make_uniq<IntGeneratorGlobalState>(input);
 }
 
 void RandomIntExecute(ClientContext&, TableFunctionInput& input, DataChunk& output) {
-    auto& state = input.global_state->Cast<RandomIntGlobalState>();
+    auto& state = input.global_state->Cast<IntGeneratorGlobalState>();
 
     D_ASSERT(state.num_generated_rows <= state.max_generated_rows); // We don't want to underflow
     const auto num_remaining_rows = state.max_generated_rows - state.num_generated_rows;
