@@ -5,6 +5,7 @@
 #include "duckdb/main/extension/extension_loader.hpp"
 #include "table_functions/booleans.hpp"
 #include "table_functions/numbers.hpp"
+#include "table_functions/random_data.hpp"
 #include "table_functions/strings.hpp"
 
 namespace duckdb {
@@ -13,6 +14,9 @@ void FakerExtension::LoadInternal(ExtensionLoader& loader) {
     duckdb_faker::RandomBoolFunction::RegisterFunction(loader);
     duckdb_faker::RandomIntFunction::RegisterFunction(loader);
     duckdb_faker::RandomStringFunction::RegisterFunction(loader);
+
+    // Generates mixed types based on a source schema
+    duckdb_faker::RandomDataFunction::RegisterFunction(loader);
 }
 
 void FakerExtension::Load(ExtensionLoader& loader) {

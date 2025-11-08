@@ -13,6 +13,7 @@ set(SOURCE_FILES
     src/table_functions/booleans.cpp
     src/table_functions/generator_global_state.cpp
     src/table_functions/numbers.cpp
+    src/table_functions/random_data.cpp
     src/table_functions/rowid_generator.cpp
     src/table_functions/strings.cpp)
 

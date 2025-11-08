@@ -11,6 +11,7 @@ add_executable(
     unittests
     test_booleans.cpp
     test_numbers.cpp
+    test_random_data.cpp
     test_rowid.cpp
     test_shared.cpp
     test_strings.cpp
