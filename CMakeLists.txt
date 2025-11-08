@@ -33,8 +33,12 @@ build_loadable_extension(${TARGET_NAME} ${PARAMETERS} ${SOURCE_FILES})
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
-target_include_directories(${EXTENSION_NAME} PRIVATE ${INCLUDES} PRIVATE SYSTEM submodules/faker-cxx/include)
-target_include_directories(${LOADABLE_EXTENSION_NAME} PRIVATE ${INCLUDES} PRIVATE SYSTEM submodules/faker-cxx/include)
+target_include_directories(${EXTENSION_NAME}
+    PUBLIC ${INCLUDES}
+    PUBLIC SYSTEM submodules/duckdb/src/include submodules/faker-cxx/include)
+target_include_directories(${LOADABLE_EXTENSION_NAME}
+    PRIVATE ${INCLUDES}
+    PRIVATE SYSTEM submodules/duckdb/src/include submodules/faker-cxx/include)
 
 set(BUILD_TESTING OFF)
 add_subdirectory(submodules/faker-cxx)
@@ -49,5 +53,4 @@ add_dependencies(${LOADABLE_EXTENSION_NAME} duckdb shell)
 add_custom_command(TARGET ${LOADABLE_EXTENSION_NAME} POST_BUILD
     COMMAND ${PROJECT_BINARY_DIR}/duckdb/duckdb -c "FORCE INSTALL '${PROJECT_BINARY_DIR}/${TARGET_NAME}.duckdb_extension'"
     COMMENT "Installing Faker extension in DuckDB"
-    VERBATIM
-)
+    VERBATIM)
